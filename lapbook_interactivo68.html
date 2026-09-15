@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="1112.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lapbook Digital - Plan de Seguridad Informática</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            crimson: '#b91c1c',    // Rojo intenso
+                            crimsonLight: '#ef4444',
+                            teal: '#7c3aed',       // Morado acento
+                            tealLight: '#a78bfa',
+                            gold: '#f5f5f5',       // Blanco / plata para acentos
+                            ruby: '#991b1b',       // Rojo oscuro para alertas
+                            dark: '#000000',       // Fondo negro
+                            card: '#0d0d0d',       // Tarjeta negra
+                            surface: '#1a1a1a'     // Superficie de elementos
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & FontAwesome icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js para métricas dinámicas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .lapbook-tab {
+            clip-path: polygon(0 0, 85% 0, 100% 100%, 0% 100%);
+            transition: all 0.2s ease-in-out;
+        }
+        .lapbook-tab.active {
+            transform: translateY(-2px);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(185, 28, 28, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #b91c1c;
+            border-radius: 4px;
+        }
+
+        /* Pulsing effect for hotspots */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 0.3; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .hotspot-ring {
+            animation: pulse-ring 2s infinite ease-in-out;
+        }
+
+        /* Custom subtle gold & crimson gradient text */
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .crimson-gradient-text {
+            background: linear-gradient(135deg, #ef4444 0%, #7f1d1d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ---- LIGHT MODE OVERRIDES (toggled via toggleDarkMode) ---- */
+        body.light-mode {
+            background-color: #f1f5f9 !important;
+            color: #171717 !important;
+        }
+        body.light-mode .bg-black,
+        body.light-mode .bg-black\/80,
+        body.light-mode .bg-black\/70 { background-color: #f8fafc !important; }
+        body.light-mode .bg-neutral-900,
+        body.light-mode .bg-neutral-900\/90,
+        body.light-mode .bg-neutral-900\/80 { background-color: #ffffff !important; }
+        body.light-mode .bg-neutral-800,
+        body.light-mode .bg-neutral-800\/80,
+        body.light-mode .bg-neutral-800\/70 { background-color: #e2e8f0 !important; }
+        body.light-mode .bg-neutral-700 { background-color: #cbd5e1 !important; }
+        body.light-mode .border-neutral-800,
+        body.light-mode .border-neutral-800\/90,
+        body.light-mode .border-neutral-800\/80,
+        body.light-mode .border-neutral-700,
+        body.light-mode .border-neutral-700\/80 { border-color: #cbd5e1 !important; }
+        body.light-mode .text-white { color: #171717 !important; }
+        body.light-mode .text-neutral-100,
+        body.light-mode .text-neutral-200,
+        body.light-mode .text-neutral-300 { color: #334155 !important; }
+        body.light-mode .text-neutral-400 { color: #64748b !important; }
+        body.light-mode .hover\:bg-neutral-800:hover,
+        body.light-mode .hover\:bg-neutral-700:hover,
+        body.light-mode .hover\:bg-neutral-700\/80:hover { background-color: #e2e8f0 !important; }
+
+        /* ---- INTERACTIVE PARTICLE BACKGROUND ---- */
+        #bg-particles-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* ---- DRAGGABLE MODAL WINDOWS ---- */
+        .modal-drag-handle {
+            cursor: grab;
+            touch-action: none;
+        }
+        .modal-drag-handle:active {
+            cursor: grabbing;
+        }
+        .modal-box-draggable.is-dragging {
+            box-shadow: 0 25px 60px -10px rgba(0,0,0,0.6);
+            transition: none !important;
+        }
+    </style>
+</head>
+<body class="bg-black text-neutral-100 min-h-screen flex flex-col antialiased custom-scrollbar dark">
+
+    <!-- Interactive particle network background -->
+    <canvas id="bg-particles-canvas"></canvas>
+
+    <header class="bg-neutral-900/90 backdrop-blur-md border-b border-neutral-800 sticky top-0 z-50 px-4 py-3 shadow-xl">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3.5">
+                <div class="bg-gradient-to-tr from-brand-crimson to-neutral-800 p-2.5 rounded-xl shadow-lg shadow-brand-crimson/20 border border-brand-crimsonLight/40 text-brand-gold">
+                    <i class="fa-solid fa-shield-halved text-2xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-brand-crimson/20 text-brand-gold border border-brand-gold/30 uppercase tracking-widest">
+                            PROYECTO INTEGRAL DE CIBERSEGURIDAD
+                        </span>
+                    </div>
+                    <h1 class="text-lg font-bold text-white tracking-tight">
+                        <span class="crimson-gradient-text font-black">SecureTech Solutions</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Global Controls -->
+            <div class="flex items-center space-x-3">
+                
+                <!-- Risk Level Indicator -->
+                <div class="hidden md:flex items-center bg-neutral-800/80 border border-neutral-700/80 rounded-xl px-3.5 py-1.5 text-xs">
+                    <span class="text-neutral-400 mr-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation text-brand-gold"></i> Estado Global:
+                    </span>
+                    <span id="global-risk-badge" class="font-bold text-emerald-400 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Protegido (Bajo Riesgo)
+                    </span>
+                </div>
+
+                <!-- Notes / Audit Modal Button -->
+                <button onclick="openAuditNotesModal()" class="bg-neutral-800 hover:bg-neutral-700/80 text-neutral-200 border border-neutral-700 px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition hover:border-brand-gold/40 shadow-sm">
+                    <i class="fa-solid fa-pen-to-square text-brand-gold"></i>
+                    <span>Notas de Auditoría</span>
+                    <span id="notes-count-badge" class="bg-brand-crimson text-white px-2 py-0.5 text-[10px] font-bold rounded-full border border-brand-crimsonLight">0</span>
+                </button>
+
+                <!-- Dark / Light Mode Toggle -->
+                <button onclick="toggleDarkMode()" id="theme-toggle-btn" class="p-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-brand-gold rounded-xl transition hover:border-brand-gold/40" title="Cambiar Tema">
+                    <i class="fa-solid fa-sun text-sm"></i>
+                </button>
+
+                <!-- Mobile Navigation Menu Button -->
+                <button onclick="toggleMobileMenu()" class="lg:hidden p-2 text-neutral-300 hover:text-white bg-neutral-800 rounded-xl border border-neutral-700">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MOBILE NAV OVERLAY -->
+    <div id="mobile-nav-overlay" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-40 lg:hidden" onclick="toggleMobileMenu()"></div>
+
+    <div class="relative z-10 flex-grow max-w-7xl w-full mx-auto flex flex-col lg:flex-row gap-6 p-4 md:p-6">
+        
+        <!-- SIDEBAR TABS NAVIGATION -->
+        <aside id="sidebar-nav" class="hidden lg:block w-full lg:w-72 flex-shrink-0 space-y-1">
+            <div class="bg-neutral-900/90 backdrop-blur-md rounded-2xl p-4 border border-neutral-800 sticky top-20 shadow-2xl">
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-neutral-800">
+                    <span class="text-xs font-mono font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-folder-open text-brand-gold"></i>Lapbook
+                    </span>
+                </div>
+
+                <!-- Scrollable Tab Buttons -->
+                <nav class="space-y-1 max-h-[calc(100vh-180px)] overflow-y-auto pr-1 custom-scrollbar" id="nav-tabs-container">
+                    <!-- Nav items dynamically injected -->
+                </nav>
+            </div>
+        </aside>
+
+        <!-- MAIN DISPLAY CARD -->
+        <main class="flex-grow min-w-0">
+            <div id="content-display-card" class="bg-neutral-900/80 border border-neutral-800 rounded-2xl p-5 md:p-8 shadow-2xl relative min-h-[600px] flex flex-col justify-between backdrop-blur-sm">
+                
+                <!-- ACTIVE SECTION CONTENT INJECTED HERE -->
+                <div id="section-body">
+                    <!-- Dynamic Module Content -->
+                </div>
+
+                <!-- SECTION FOOTER NAVIGATION -->
+                <div class="mt-8 pt-5 border-t border-neutral-800/90 flex justify-between items-center text-sm">
+                    <button id="btn-prev-section" onclick="navigateSection(-1)" class="px-4 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-xl font-medium transition flex items-center gap-2 border border-neutral-700/80">
+                        <i class="fa-solid fa-arrow-left"></i> Anterior
+                    </button>
+                    <span id="section-step-indicator" class="font-mono text-xs text-brand-gold bg-brand-crimson/10 px-3 py-1 rounded-full border border-brand-crimson/30">Módulo 1 de 16</span>
+                    <button id="btn-next-section" onclick="navigateSection(1)" class="px-5 py-2.5 bg-gradient-to-r from-brand-crimson to-neutral-800 hover:from-brand-crimsonLight hover:to-brand-crimson text-white rounded-xl font-semibold transition flex items-center gap-2 shadow-lg shadow-brand-crimson/20 border border-brand-crimsonLight/50">
+                        Siguiente <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- FOOTER COMPONENT -->
+    <footer class="mt-auto bg-neutral-900/90 border-t border-neutral-800 text-neutral-400 text-xs py-8 px-4 relative z-40 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-6">
+            
+            <!-- Col 1: Corporate Info -->
+            <div class="space-y-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-shield-halved text-brand-gold text-lg"></i>
+                    <span class="font-bold text-white text-sm">SecureTech Solutions</span>
+                </div>
+                <p class="text-neutral-400 text-[11px] leading-relaxed">
+                    Líderes en infraestructura defensiva, auditoría de código DevSecOps y servicios de ciberseguridad transaccional para el sector FinTech.
+                </p>
+                <div class="flex items-center gap-2 text-[10px] text-emerald-400 font-mono bg-black/80 p-2 rounded-lg border border-neutral-800 w-fit">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span>Sistemas Operativos 99.99% SLA</span>
+                </div>
+            </div>
+
+            <!-- Col 2: Headquarters & Contact -->
+            <div class="space-y-2.5">
+                <h4 class="font-bold text-white text-xs uppercase tracking-wider font-mono border-b border-neutral-800 pb-1.5">
+                    <i class="fa-solid fa-location-dot text-brand-gold mr-1"></i> Casa Matriz
+                </h4>
+                <p class="text-neutral-300 text-xs leading-snug">
+                    <strong>SecureTech Tower</strong><br>
+                    Av. Las Condes 10200, Oficina 1402<br>
+                    Santiago, Chile
+                </p>
+                <p class="text-[11px] text-neutral-400 pt-1">
+                    <i class="fa-solid fa-phone text-brand-teal mr-1"></i> +56 9 3668 1371<br>
+                    <i class="fa-solid fa-envelope text-brand-teal mr-1"></i> securetechtower@gmail.com
+                </p>
+            </div>
+
+            <!-- Col 3: Quick Links & Resources -->
+            <div class="space-y-2">
+                <h4 class="font-bold text-white text-xs uppercase tracking-wider font-mono border-b border-neutral-800 pb-1.5">
+                    <i class="fa-solid fa-link text-brand-gold mr-1"></i> Enlaces Rápidos
+                </h4>
+                <ul class="space-y-1.5 text-xs">
+                    <li><a href="javascript:void(0)" onclick="switchSection(2)" class="hover:text-brand-gold transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-brand-gold"></i> Mapa Corporativo</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchSection(4)" class="hover:text-brand-gold transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-brand-gold"></i> Topología de Red</a></li>
+                    <li><a href="javascript:void(0)" onclick="switchSection(7)" class="hover:text-brand-gold transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-brand-gold"></i> Matriz de Riesgos</a></li>
+                    <li><a href="javascript:void(0)" onclick="openAuditNotesModal()" class="hover:text-brand-gold transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-brand-gold"></i> Bitácora de Auditoría</a></li>
+                </ul>
+            </div>
+
+            <!-- Col 4: Legal & Social -->
+            <div class="space-y-3">
+                <h4 class="font-bold text-white text-xs uppercase tracking-wider font-mono border-b border-neutral-800 pb-1.5">
+                    <i class="fa-solid fa-shield-cat text-brand-gold mr-1"></i> Cumplimiento & Redes
+                </h4>
+                <div class="flex space-x-3 text-base">
+                    <a href="https://www.linkedin.com/in/securetech-tower-5b0671435/" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-neutral-800 hover:bg-brand-crimson text-neutral-300 hover:text-white flex items-center justify-center transition border border-neutral-700" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="https://github.com/Securetech976" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-neutral-800 hover:bg-brand-crimson text-neutral-300 hover:text-white flex items-center justify-center transition border border-neutral-700" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a href="https://x.com/securei9k" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-neutral-800 hover:bg-brand-crimson text-neutral-300 hover:text-white flex items-center justify-center transition border border-neutral-700" title="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
+                </div>
+                <div class="text-[11px] text-neutral-400 space-y-1">
+                    <p><a href="javascript:void(0)" onclick="showLegalDoc('privacy')" class="hover:underline text-neutral-400">Políticas de Privacidad</a> &bull; <a href="javascript:void(0)" onclick="showLegalDoc('terms')" class="hover:underline text-neutral-400">Términos de Servicio</a></p>
+                    <p>Certificación ISO 27001 / PCI-DSS v4.0</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Copyright -->
+        <div class="max-w-7xl mx-auto pt-4 border-t border-neutral-800/80 flex flex-col sm:flex-row justify-between items-center text-[11px] text-neutral-400 gap-2">
+            <p>© <span id="current-year-display">2026</span> SecureTech Solutions S.A. Todos los derechos reservados.</p>
+            <span class="font-mono text-[10px] bg-black px-2.5 py-1 rounded border border-neutral-800 text-brand-gold">v2.5.0 Final Security </span>
+        </div>
+    </footer>
+
+    <!-- MODAL 1: AUDIT NOTES -->
+    <div id="audit-notes-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div id="audit-notes-box" class="modal-box-draggable bg-neutral-900 border border-brand-crimson/40 w-full max-w-lg rounded-2xl shadow-2xl p-6 relative">
+            <button onclick="closeAuditNotesModal()" class="absolute top-4 right-4 text-neutral-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="modal-drag-handle flex items-center gap-3 mb-4 -m-2 p-2 rounded-xl hover:bg-white/5 transition select-none" title="Arrastra para mover esta ventana">
+                <div class="p-3 bg-brand-crimson/20 text-brand-gold border border-brand-gold/30 rounded-xl">
+                    <i class="fa-solid fa-clipboard-list text-xl"></i>
+                </div>
+                <div class="flex-grow">
+                    <h3 class="text-lg font-bold text-white">Notas de Auditoría de Ciberseguridad</h3>
+                    <p class="text-xs text-neutral-400">Almacenamiento persistente en LocalStorage</p>
+                </div>
+                <i class="fa-solid fa-up-down-left-right text-neutral-600 text-sm mr-6"></i>
+            </div>
+            
+            <textarea id="audit-notes-input" rows="6" placeholder="Escribe aquí tus hallazgos, observaciones de riesgos o pendientes de seguridad..." 
+                class="w-full bg-black border border-neutral-800 rounded-xl p-3.5 text-sm text-neutral-200 focus:outline-none focus:border-brand-gold font-mono mb-4 resize-none transition"></textarea>
+            
+            <div class="flex justify-between items-center">
+                <span id="notes-status-text" class="text-xs text-emerald-400 hidden"><i class="fa-solid fa-check mr-1"></i> Guardado exitosamente</span>
+                <div class="flex gap-2 ml-auto">
+                    <button onclick="clearAuditNotes()" class="px-3 py-2 text-xs text-rose-400 hover:bg-rose-500/10 rounded-xl transition border border-transparent hover:border-rose-500/30">Limpiar</button>
+                    <button onclick="saveAuditNotes()" class="px-4 py-2 bg-brand-crimson hover:bg-brand-crimsonLight text-white text-xs font-bold rounded-xl transition border border-brand-crimsonLight/50 shadow-md">Guardar Nota</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: DETAIL INSPECTOR -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div id="detail-modal-box" class="modal-box-draggable bg-neutral-900 border border-neutral-700 w-full max-w-2xl rounded-2xl shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-neutral-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="modal-drag-handle flex items-center gap-2 text-[10px] text-neutral-500 font-mono uppercase tracking-wider mb-3 -mt-1 pb-2 pr-8 border-b border-neutral-800/70 select-none" title="Arrastra para mover esta ventana">
+                <i class="fa-solid fa-up-down-left-right text-brand-gold"></i> Arrastra para mover esta ventana
+            </div>
+            <div id="modal-detail-content">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Structure for 16 Modules
+        const lapbookModules = [
+            {
+                id: 1,
+                title: "1. Portada / Home",
+                icon: "fa-house-laptop",
+                category: "General",
+                render: () => `
+                    <div class="space-y-6">
+                        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-950 via-brand-crimson/25 to-neutral-950 border border-brand-crimson/40 p-6 md:p-10 text-center shadow-2xl">
+                            <div class="inline-block p-4 rounded-2xl bg-brand-crimson/20 text-brand-gold border border-brand-gold/30 mb-4 shadow-inner">
+                                <i class="fa-solid fa-shield-cat text-5xl"></i>
+                            </div>
+                            <span class="block text-xs font-mono text-brand-gold uppercase tracking-widest mb-2 font-bold">SISTEMA INTEGRAL DE PROTECCIÓN</span>
+                            <h2 class="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight">PLAN DE SEGURIDAD INFORMÁTICA</h2>
+                            <p class="text-neutral-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed mb-6">
+                                Lapbook Digital Interactivo diseñado para evaluar, prevenir y mitigar riesgos tecnológicos en la entidad financiera <strong class="text-brand-gold">SecureTech Solutions / FinTech Global</strong>.
+                            </p>
+                            <div class="flex flex-wrap justify-center gap-3 text-xs font-mono">
+                                <span class="bg-neutral-900/90 text-neutral-300 px-3.5 py-1.5 rounded-xl border border-neutral-800 flex items-center gap-2"><i class="fa-solid fa-building text-brand-gold"></i> Empresa: SecureTech Solutions</span>
+                                <span class="bg-neutral-900/90 text-neutral-300 px-3.5 py-1.5 rounded-xl border border-neutral-800 flex items-center gap-2"><i class="fa-solid fa-users text-brand-teal"></i> Equipo: DevSecOps Lead</span>
+                                <span class="bg-neutral-900/90 text-neutral-300 px-3.5 py-1.5 rounded-xl border border-neutral-800 flex items-center gap-2"><i class="fa-solid fa-code text-brand-crimsonLight"></i> Stack: HTML5 / Tailwind / JS</span>
+                            </div>
+                        </div>
+
+                        <!-- Quick Overview Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div onclick="switchSection(2)" class="cursor-pointer bg-neutral-900/90 hover:bg-neutral-800/90 border border-neutral-800 hover:border-brand-gold/50 p-5 rounded-2xl transition group shadow-md">
+                                <div class="text-brand-gold text-3xl mb-3 group-hover:scale-110 transition-transform"><i class="fa-solid fa-map-location-dot"></i></div>
+                                <h3 class="font-bold text-white text-sm mb-1 group-hover:text-brand-gold transition">Mapa  Corporativo</h3>
+                                <p class="text-xs text-neutral-400">Ubicación  e instalaciones interactivas de SecureTech Tower.</p>
+                            </div>
+                            <div onclick="switchSection(4)" class="cursor-pointer bg-neutral-900/90 hover:bg-neutral-800/90 border border-neutral-800 hover:border-brand-teal/50 p-5 rounded-2xl transition group shadow-md">
+                                <div class="text-brand-teal text-3xl mb-3 group-hover:scale-110 transition-transform"><i class="fa-solid fa-sitemap"></i></div>
+                                <h3 class="font-bold text-white text-sm mb-1 group-hover:text-brand-teal transition">Topología de Red</h3>
+                                <p class="text-xs text-neutral-400">Zonas de red, DMZ y aislamiento de servidores críticos.</p>
+                            </div>
+                            <div onclick="switchSection(7)" class="cursor-pointer bg-neutral-900/90 hover:bg-neutral-800/90 border border-neutral-800 hover:border-brand-crimsonLight/50 p-5 rounded-2xl transition group shadow-md">
+                                <div class="text-brand-crimsonLight text-3xl mb-3 group-hover:scale-110 transition-transform"><i class="fa-solid fa-chart-pie"></i></div>
+                                <h3 class="font-bold text-white text-sm mb-1 group-hover:text-brand-crimsonLight transition">Matriz de Riesgos</h3>
+                                <p class="text-xs text-neutral-400">Evaluación dinámica de impacto y frecuencia de vulnerabilidades.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 2,
+                title: "2. Mapa  Corporativo",
+                icon: "fa-map-location-dot",
+                category: "Ubicación",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">01. UBICACIÓN FÍSICA Y GEOGRÁFICA</span>
+                            <h2 class="text-2xl font-bold text-white">Mapa  Corporativo - SecureTech Tower</h2>
+                            <p class="text-xs text-neutral-400">Av. Las Condes 10200, Santiago, Chile. Haz clic sobre cada zona del plano interactivo para examinar sus protocolos de seguridad física.</p>
+                        </div>
+
+                        <!-- Real-time Status Header -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono text-xs">
+                            <div class="bg-black p-3 rounded-xl border border-neutral-800 flex items-center justify-between">
+                                <span class="text-neutral-400">Coordenadas:</span>
+                                <span class="text-brand-gold font-bold">33°22'41.2"S 70°31'15.8"W</span>
+                            </div>
+                            <div class="bg-black p-3 rounded-xl border border-neutral-800 flex items-center justify-between">
+                                <span class="text-neutral-400">Estatus Operativo:</span>
+                                <span class="text-emerald-400 font-bold flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> 100% Normal
+                                </span>
+                            </div>
+                            <div class="bg-black p-3 rounded-xl border border-neutral-800 flex items-center justify-between">
+                                <span class="text-neutral-400">Perímetro Defensivo:</span>
+                                <span class="text-brand-teal font-bold">Nivel 4 Criptográfico</span>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Blueprint / Map Diagram -->
+                        <div class="bg-black p-6 rounded-2xl border border-neutral-800 shadow-2xl relative overflow-hidden">
+                            <div class="text-xs font-mono text-neutral-400 mb-4 flex justify-between items-center pb-2 border-b border-neutral-800">
+                                <span><i class="fa-solid fa-layer-group text-brand-gold mr-1"></i> PLANO DE INSTALACIONES (CAMPUS CORPORATIVO)</span>
+                                <span class="text-[10px] bg-brand-crimson/20 text-rose-300 px-2.5 py-0.5 rounded-full border border-brand-crimsonLight/30 font-bold">ACCESO RESTRINGIDO</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                
+                                <!-- Zone A: Bunker Data Center -->
+                                <div onclick="showMapZoneDetail('bunker')" class="cursor-pointer bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800 hover:border-brand-crimsonLight p-4 rounded-xl transition group shadow-lg relative">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="p-2.5 bg-brand-crimson/20 text-rose-400 rounded-xl border border-brand-crimsonLight/40 group-hover:scale-110 transition">
+                                            <i class="fa-solid fa-vault text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-white group-hover:text-rose-300 transition">01. Data Center Búnker</h4>
+                                            <span class="text-[10px] text-neutral-400 font-mono">Subsuelo -1 (Subterráneo)</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-300 line-clamp-2">Servidores con gas inerte FM-200, UPS de 72h y doble control biométrico.</p>
+                                    <div class="mt-3 flex justify-between items-center text-[10px] font-mono text-brand-gold">
+                                        <span>Criticidad: MÁXIMA</span>
+                                        <i class="fa-solid fa-circle-chevron-right text-xs"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Zone B: SOC 24/7 -->
+                                <div onclick="showMapZoneDetail('soc')" class="cursor-pointer bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800 hover:border-brand-teal p-4 rounded-xl transition group shadow-lg relative">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="p-2.5 bg-brand-teal/20 text-brand-teal rounded-xl border border-brand-teal/40 group-hover:scale-110 transition">
+                                            <i class="fa-solid fa-desktop text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-white group-hover:text-brand-teal transition">02. Centro de Operaciones (SOC)</h4>
+                                            <span class="text-[10px] text-neutral-400 font-mono">Piso 2 - Ala Norte</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-300 line-clamp-2">Monitoreo SIEM en tiempo real 24/7, videowall defensivo y aislamiento electromagnético.</p>
+                                    <div class="mt-3 flex justify-between items-center text-[10px] font-mono text-brand-teal">
+                                        <span>Criticidad: ALTA</span>
+                                        <i class="fa-solid fa-circle-chevron-right text-xs"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Zone C: Biometric Control Entry -->
+                                <div onclick="showMapZoneDetail('entry')" class="cursor-pointer bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800 hover:border-brand-gold p-4 rounded-xl transition group shadow-lg relative">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="p-2.5 bg-brand-gold/20 text-brand-gold rounded-xl border border-brand-gold/40 group-hover:scale-110 transition">
+                                            <i class="fa-solid fa-fingerprint text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-white group-hover:text-brand-gold transition">03. Control Biométrico Acceso</h4>
+                                            <span class="text-[10px] text-neutral-400 font-mono">Piso 1 - Recepción</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-300 line-clamp-2">Torniquetes con escáner facial 3D, molinetes de alta seguridad e inspección Rayos X.</p>
+                                    <div class="mt-3 flex justify-between items-center text-[10px] font-mono text-brand-gold">
+                                        <span>Criticidad: MEDIA-ALTA</span>
+                                        <i class="fa-solid fa-circle-chevron-right text-xs"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Zone D: Private Cloud Node -->
+                                <div onclick="showMapZoneDetail('cloud')" class="cursor-pointer bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800 hover:border-emerald-500 p-4 rounded-xl transition group shadow-lg relative">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="p-2.5 bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/40 group-hover:scale-110 transition">
+                                            <i class="fa-solid fa-cloud-lock text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-white group-hover:text-emerald-400 transition">04. Nodo Nube Privada</h4>
+                                            <span class="text-[10px] text-neutral-400 font-mono">Piso 3 - Enlace AWS Direct</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-300 line-clamp-2">Conexión dedicada por fibra óptica redundante con cifrado cuántico experimental.</p>
+                                    <div class="mt-3 flex justify-between items-center text-[10px] font-mono text-emerald-400">
+                                        <span>Criticidad: ALTA</span>
+                                        <i class="fa-solid fa-circle-chevron-right text-xs"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Zone E: DevSecOps Lab -->
+                                <div onclick="showMapZoneDetail('devlab')" class="cursor-pointer bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800 hover:border-sky-500 p-4 rounded-xl transition group shadow-lg relative">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="p-2.5 bg-sky-500/20 text-sky-400 rounded-xl border border-sky-500/40 group-hover:scale-110 transition">
+                                            <i class="fa-solid fa-flask-vial text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-white group-hover:text-sky-400 transition">05. Laboratorio DevSecOps</h4>
+                                            <span class="text-[10px] text-neutral-400 font-mono">Piso 2 - Ala Sur</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-300 line-clamp-2">Ambiente aislado Faraday para auditoría de código, pentesting y pruebas de exploits.</p>
+                                    <div class="mt-3 flex justify-between items-center text-[10px] font-mono text-sky-400">
+                                        <span>Criticidad: MEDIA</span>
+                                        <i class="fa-solid fa-circle-chevron-right text-xs"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Zone F: Executive Safe Vault -->
+                                <div onclick="showMapZoneDetail('vault')" class="cursor-pointer bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800 hover:border-purple-500 p-4 rounded-xl transition group shadow-lg relative">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="p-2.5 bg-purple-500/20 text-purple-400 rounded-xl border border-purple-500/40 group-hover:scale-110 transition">
+                                            <i class="fa-solid fa-key-skeleton text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-white group-hover:text-purple-400 transition">06. Búnker Llaves HSM</h4>
+                                            <span class="text-[10px] text-neutral-400 font-mono">Piso 3 - Directorio</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-300 line-clamp-2">Custodia de módulos criptográficos HSM para firma de transacciones bancarias.</p>
+                                    <div class="mt-3 flex justify-between items-center text-[10px] font-mono text-purple-400">
+                                        <span>Criticidad: CRÍTICA</span>
+                                        <i class="fa-solid fa-circle-chevron-right text-xs"></i>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 3,
+                title: "3. Contexto Laboral",
+                icon: "fa-building-lock",
+                category: "Contexto",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">02. PERFIL OPERATIVO</span>
+                            <h2 class="text-2xl font-bold text-white">Contexto Laboral y Entorno Tecnológico</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 hover:border-brand-crimson/40 transition">
+                                <i class="fa-solid fa-briefcase text-3xl text-brand-crimsonLight mb-3"></i>
+                                <h3 class="font-bold text-white mb-2">Perfil de la Empresa</h3>
+                                <p class="text-xs text-neutral-300 leading-relaxed">
+                                    <strong class="text-white">SecureTech Solutions</strong> es una FinTech especializada en el procesamiento de pagos digitales y desarrollo de API bancarias de alta disponibilidad. Cuenta con 45 colaboradores operando bajo modalidad híbrida.
+                                </p>
+                            </div>
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 hover:border-brand-teal/40 transition">
+                                <i class="fa-solid fa-laptop-code text-3xl text-brand-teal mb-3"></i>
+                                <h3 class="font-bold text-white mb-2">Área de Desarrollo e Informática</h3>
+                                <p class="text-xs text-neutral-300 leading-relaxed">
+                                    El departamento de TI está compuesto por 12 desarrolladores, 3 ingenieros DevOps y 2 analistas de ciberseguridad encargados del monitoreo y despliegue continuo (CI/CD).
+                                </p>
+                            </div>
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 hover:border-brand-gold/40 transition">
+                                <i class="fa-solid fa-server text-3xl text-brand-gold mb-3"></i>
+                                <h3 class="font-bold text-white mb-2">Recursos Críticos</h3>
+                                <p class="text-xs text-neutral-300 leading-relaxed">
+                                    Bases de datos PostgreSQL en la nube, servidores Web Nginx en DMZ, repositorios de código privados en GitHub Enterprise y túneles VPN IPSec.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-neutral-900 p-4 rounded-xl border-l-4 border-brand-gold text-xs text-neutral-300 space-y-1 shadow-md">
+                            <span class="font-bold text-white block flex items-center gap-2"><i class="fa-solid fa-circle-info text-brand-gold"></i> Resumen de Operaciones:</span>
+                            <p>Procesamiento estimado: 150,000 transacciones diarias con SLA del 99.99%. Requiere cumplimiento riguroso de la normativa PCI-DSS e ISO 27001.</p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 4,
+                title: "4. Mapa Interactivo de Red",
+                icon: "fa-network-wired",
+                category: "Infraestructura",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">03. TOPOLOGÍA DE RED</span>
+                            <h2 class="text-2xl font-bold text-white">Mapa de Infraestructura y Zonas de Riesgo</h2>
+                            <p class="text-xs text-neutral-400">Haz clic en los nodos para inspeccionar su nivel de aislamiento y configuración de seguridad.</p>
+                        </div>
+
+                        <!-- Interactive Topology Grid -->
+                        <div class="bg-black p-6 rounded-2xl border border-neutral-800 relative overflow-hidden shadow-inner">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 relative z-10">
+                                
+                                <!-- Zone 1: External / Cloud -->
+                                <div onclick="showNodeDetail('cloud')" class="cursor-pointer bg-neutral-900/90 hover:border-brand-gold border border-neutral-800 p-5 rounded-2xl text-center transition group shadow-lg">
+                                    <div class="p-3 bg-brand-gold/10 text-brand-gold rounded-2xl w-12 h-12 mx-auto mb-3 flex items-center justify-center group-hover:scale-110 transition border border-brand-gold/20">
+                                        <i class="fa-solid fa-cloud text-xl"></i>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-white">Internet & Nube AWS</h4>
+                                    <span class="inline-block mt-2 text-[10px] bg-brand-gold/10 text-brand-gold px-2.5 py-0.5 rounded-full border border-brand-gold/20">Zona Externa</span>
+                                </div>
+
+                                <!-- Zone 2: DMZ Firewall -->
+                                <div onclick="showNodeDetail('dmz')" class="cursor-pointer bg-neutral-900/90 hover:border-brand-teal border border-neutral-800 p-5 rounded-2xl text-center transition group shadow-lg">
+                                    <div class="p-3 bg-brand-teal/10 text-brand-teal rounded-2xl w-12 h-12 mx-auto mb-3 flex items-center justify-center group-hover:scale-110 transition border border-brand-teal/20">
+                                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-white">Firewall Perimetral & DMZ</h4>
+                                    <span class="inline-block mt-2 text-[10px] bg-brand-teal/10 text-brand-teal px-2.5 py-0.5 rounded-full border border-brand-teal/20">Filtro WAF</span>
+                                </div>
+
+                                <!-- Zone 3: Internal Network -->
+                                <div onclick="showNodeDetail('internal')" class="cursor-pointer bg-neutral-900/90 hover:border-emerald-500 border border-neutral-800 p-5 rounded-2xl text-center transition group shadow-lg">
+                                    <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl w-12 h-12 mx-auto mb-3 flex items-center justify-center group-hover:scale-110 transition border border-emerald-500/20">
+                                        <i class="fa-solid fa-laptop-code text-xl"></i>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-white">Estaciones Dev & VPN</h4>
+                                    <span class="inline-block mt-2 text-[10px] bg-emerald-500/10 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/20">VLAN 10 Interna</span>
+                                </div>
+
+                                <!-- Zone 4: Critical DB -->
+                                <div onclick="showNodeDetail('db')" class="cursor-pointer bg-neutral-900/90 hover:border-brand-crimsonLight border border-neutral-800 p-5 rounded-2xl text-center transition group shadow-lg">
+                                    <div class="p-3 bg-brand-crimson/20 text-rose-400 rounded-2xl w-12 h-12 mx-auto mb-3 flex items-center justify-center group-hover:scale-110 transition border border-brand-crimsonLight/30">
+                                        <i class="fa-solid fa-database text-xl"></i>
+                                    </div>
+                                    <h4 class="text-xs font-bold text-white">Servidor BD Transaccional</h4>
+                                    <span class="inline-block mt-2 text-[10px] bg-brand-crimson/20 text-rose-300 px-2.5 py-0.5 rounded-full border border-brand-crimsonLight/30 font-bold">Alta Criticidad</span>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 5,
+                title: "5. Inventario Tecnológico",
+                icon: "fa-list-check",
+                category: "Activos",
+                render: () => {
+                    const assets = [
+                        { id: "ACT-01", name: "Servidor DB PostgreSQL", cat: "Hardware / Cloud", func: "Almacenamiento de datos bancarios", crit: "Alta" },
+                        { id: "ACT-02", name: "Firewall Fortinet UTM", cat: "Redes", func: "Filtrado de tráfico perimetral e IPS", crit: "Alta" },
+                        { id: "ACT-03", name: "GitHub Enterprise Repo", cat: "Software / SaaS", func: "Repositorio de código fuente", crit: "Media" },
+                        { id: "ACT-04", name: "Laptops Desarrolladores (45)", cat: "Endpoints", func: "Estaciones de trabajo remotas", crit: "Media" },
+                        { id: "ACT-05", name: "API Gateway Kong", cat: "Middleware", func: "Ruteo y autenticación de microservicios", crit: "Alta" },
+                        { id: "ACT-06", name: "Servidor CI/CD Jenkins", cat: "DevOps", func: "Compilación y despliegue automático", crit: "Media" },
+                        { id: "ACT-07", name: "Switch Core Cisco Catalyst", cat: "Redes Local", func: "Conmutación LAN y VLANs", crit: "Media" },
+                        { id: "ACT-08", name: "Sistema Backup NAS Local", cat: "Almacenamiento", func: "Copia física incremental de seguridad", crit: "Alta" }
+                    ];
+
+                    return `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">04. REGISTRO DE ACTIVOS</span>
+                            <h2 class="text-2xl font-bold text-white">Inventario Tecnológico Principal</h2>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-2xl border border-neutral-800 shadow-xl">
+                            <table class="w-full text-left text-xs text-neutral-300">
+                                <thead class="bg-neutral-900 text-brand-gold uppercase font-mono border-b border-neutral-800">
+                                    <tr>
+                                        <th class="p-3.5">ID</th>
+                                        <th class="p-3.5">Activo Tecnológico</th>
+                                        <th class="p-3.5">Categoría</th>
+                                        <th class="p-3.5">Función Principal</th>
+                                        <th class="p-3.5">Criticidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-neutral-800/80 bg-black/60">
+                                    ${assets.map(a => `
+                                        <tr class="hover:bg-neutral-900/80 transition">
+                                            <td class="p-3.5 font-mono text-brand-gold font-bold">${a.id}</td>
+                                            <td class="p-3.5 font-semibold text-white">${a.name}</td>
+                                            <td class="p-3.5 text-neutral-400">${a.cat}</td>
+                                            <td class="p-3.5">${a.func}</td>
+                                            <td class="p-3.5">
+                                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${a.crit === 'Alta' ? 'bg-brand-crimson/20 text-rose-300 border border-brand-crimsonLight/40' : 'bg-brand-gold/10 text-brand-gold border border-brand-gold/30'}">
+                                                    ${a.crit}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    `;
+                }
+            },
+            {
+                id: 6,
+                title: "6. Identificación de Riesgos",
+                icon: "fa-triangle-exclamation",
+                category: "Riesgos",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">05. AMENAZAS DETECTADAS</span>
+                            <h2 class="text-2xl font-bold text-white">Identificación Global de Riesgos (Mín. 10)</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            
+                            <!-- Physical Risks -->
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 space-y-3 shadow-lg">
+                                <div class="flex items-center gap-2 text-rose-400 font-bold text-sm border-b border-neutral-800 pb-2">
+                                    <i class="fa-solid fa-fire text-brand-crimsonLight"></i> 1. Riesgos Físicos
+                                </div>
+                                <ul class="text-xs space-y-2 text-neutral-300">
+                                    <li class="bg-black p-2.5 rounded-xl border border-neutral-800"><strong>Corte Eléctrico Repentino:</strong> Pérdida de transacciones por falla en UPS.</li>
+                                    <li class="bg-black p-2.5 rounded-xl border border-neutral-800"><strong>Robo de Equipos:</strong> Sustracción física de laptops de desarrolladores.</li>
+                                    <li class="bg-black p-2.5 rounded-xl border border-neutral-800"><strong>Sobrecalentamiento:</strong> Falla en aire acondicionado del CPD.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Digital Risks -->
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 space-y-3 shadow-lg">
+                                <div class="flex items-center gap-2 text-brand-teal font-bold text-sm border-b border-neutral-800 pb-2">
+                                    <i class="fa-solid fa-bug"></i> 2. Riesgos Digitales
+                                </div>
+                                <ul class="text-xs space-y-2 text-neutral-300">
+                                    <li class="bg-black p-2.5 rounded-xl border border-neutral-800"><strong>Ataque Ransomware:</strong> Cifrado no autorizado de la BD PostgreSQL.</li>
+                                    <li class="bg-black p-2.5 rounded-xl border border-neutral-800"><strong>Inyección SQL:</strong> Explotación de vulnerabilidad en API pública.</li>
+                                    <li class="bg-black p-2.5 rounded-xl border border-neutral-800"><strong>Ataque DDoS:</strong> Saturación del servidor web y denegación.</li>
+                                    <li class="bg-black p-2.5 rounded-xl border border-neutral-800"><strong>Malware Endpoint:</strong> Infección de troyano vía descargables.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Human Risks -->
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 space-y-3 shadow-lg">
+                                <div class="flex items-center gap-2 text-brand-gold font-bold text-sm border-b border-neutral-800 pb-2">
+                                    <i class="fa-solid fa-user-ninja"></i> 3. Riesgos Humanos
+                                </div>
+                                <ul class="text-xs space-y-2 text-neutral-300">
+                                    <li class="bg-black p-2.5 rounded-xl border border-neutral-800"><strong>Phishing Spear:</strong> Engaño dirigido a ejecutivos con acceso a claves.</li>
+                                    <li class="bg-black p-2.5 rounded-xl border border-neutral-800"><strong>Ingeniería Social:</strong> Suplantación por llamadas (Vishing).</li>
+                                    <li class="bg-black p-2.5 rounded-xl border border-neutral-800"><strong>Fuga Accidental:</strong> Publicación inadvertida de credenciales.</li>
+                                </ul>
+                            </div>
+
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 7,
+                title: "7. Matriz de Riesgos Interactiva",
+                icon: "fa-table-cells-large",
+                category: "Evaluación",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">06. EVALUACIÓN CUANTITATIVA</span>
+                            <h2 class="text-2xl font-bold text-white">Calculadora Dinámica de Matriz de Riesgos</h2>
+                            <p class="text-xs text-neutral-400">Selecciona niveles de Probabilidad e Impacto para calcular el nivel de riesgo en tiempo real.</p>
+                        </div>
+
+                        <!-- Interactive Calculator Widget -->
+                        <div class="bg-neutral-900 p-6 rounded-2xl border border-neutral-800 grid grid-cols-1 md:grid-cols-3 gap-6 items-center shadow-xl">
+                            <div class="space-y-3">
+                                <label class="block text-xs font-bold text-neutral-300">Probabilidad (1 - 5):</label>
+                                <input type="range" id="risk-prob" min="1" max="5" value="4" oninput="updateRiskMatrixCalc()" class="w-full accent-brand-crimsonLight">
+                                <div class="flex justify-between text-[10px] text-neutral-500 font-mono">
+                                    <span>1 (Rara vez)</span>
+                                    <span id="prob-val-display" class="text-brand-gold font-bold text-xs">4</span>
+                                    <span>5 (Muy Frecuente)</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <label class="block text-xs font-bold text-neutral-300">Impacto / Consecuencia (1 - 5):</label>
+                                <input type="range" id="risk-impact" min="1" max="5" value="5" oninput="updateRiskMatrixCalc()" class="w-full accent-brand-crimsonLight">
+                                <div class="flex justify-between text-[10px] text-neutral-500 font-mono">
+                                    <span>1 (Insignificante)</span>
+                                    <span id="impact-val-display" class="text-brand-gold font-bold text-xs">5</span>
+                                    <span>5 (Catastrófico)</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-black p-4 rounded-2xl text-center border border-neutral-800 shadow-inner">
+                                <span class="text-[10px] uppercase font-mono text-neutral-400">Puntaje de Riesgo (P x I)</span>
+                                <div id="risk-score-display" class="text-3xl font-black text-rose-500 my-1">20</div>
+                                <span id="risk-classification-tag" class="px-3 py-1 rounded-full text-xs font-bold bg-brand-crimson/20 text-rose-300 border border-brand-crimsonLight/40">
+                                    RIESGO CRÍTICO
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Risk Chart -->
+                        <div class="bg-neutral-900 p-5 rounded-2xl border border-neutral-800 flex flex-col md:flex-row gap-6 items-center shadow-xl">
+                            <div class="w-full md:w-1/2 h-52">
+                                <canvas id="riskChart"></canvas>
+                            </div>
+                            <div class="w-full md:w-1/2 text-xs space-y-2.5 text-neutral-300">
+                                <h4 class="font-bold text-white text-sm border-b border-neutral-800 pb-2">Distribución de Vulnerabilidades:</h4>
+                                <p class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-brand-crimson"></span> <strong class="text-rose-400">Alto / Crítico (15-25):</strong> Ransomware, Phishing masivo, Inyección SQL.</p>
+                                <p class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-brand-gold"></span> <strong class="text-brand-gold">Moderado (8-12):</strong> Caída de UPS local, Fuga de código.</p>
+                                <p class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-brand-teal"></span> <strong class="text-brand-teal">Bajo (1-6):</strong> Falla menor en impresoras, Malware neutralizado.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 8,
+                title: "8. Medidas Preventivas",
+                icon: "fa-shield-virus",
+                category: "Mitigación",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">07. ESTRATEGIA OPERATIVA</span>
+                            <h2 class="text-2xl font-bold text-white">Medidas Preventivas y Protocolos de Mitigación</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 hover:border-brand-crimson/40 transition">
+                                <div class="flex items-center gap-2 text-brand-crimsonLight font-bold text-sm mb-2">
+                                    <i class="fa-solid fa-lock"></i> 1. Prevención
+                                </div>
+                                <p class="text-xs text-neutral-300 leading-relaxed">
+                                    Implementación de Autenticación Multi-Factor (MFA) obligatoria, políticas Zero-Trust y análisis estático de código (SAST) previo al pase a producción.
+                                </p>
+                            </div>
+
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 hover:border-brand-teal/40 transition">
+                                <div class="flex items-center gap-2 text-brand-teal font-bold text-sm mb-2">
+                                    <i class="fa-solid fa-radar"></i> 2. Detección
+                                </div>
+                                <p class="text-xs text-neutral-300 leading-relaxed">
+                                    Agentes EDR (Endpoint Detection and Response) en todas las laptops y monitoreo SIEM en tiempo real para detección de anomalías en API Gateways.
+                                </p>
+                            </div>
+
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 hover:border-brand-gold/40 transition">
+                                <div class="flex items-center gap-2 text-brand-gold font-bold text-sm mb-2">
+                                    <i class="fa-solid fa-bolt"></i> 3. Respuesta
+                                </div>
+                                <p class="text-xs text-neutral-300 leading-relaxed">
+                                    Aislamiento automático de hosts infectados, revocación inmediata de tokens comprometidos y contención de VLANs afectadas.
+                                </p>
+                            </div>
+
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 hover:border-emerald-500/40 transition">
+                                <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm mb-2">
+                                    <i class="fa-solid fa-rotate-left"></i> 4. Recuperación
+                                </div>
+                                <p class="text-xs text-neutral-300 leading-relaxed">
+                                    Restauración mediante snapshots inmutables en la nube con un RTO menor a 2 horas para servicios transaccionales principales.
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 9,
+                title: "9. Seguridad de Contraseñas",
+                icon: "fa-key",
+                category: "Herramientas",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">08. CONTROL DE CREDENCIALES</span>
+                            <h2 class="text-2xl font-bold text-white">Evaluador Interactivo de Fortaleza de Contraseñas</h2>
+                            <p class="text-xs text-neutral-400">Prueba la robustez de una clave bajo los estándares corporativos de SecureTech.</p>
+                        </div>
+
+                        <!-- Password Verifier Tool -->
+                        <div class="bg-neutral-900/90 p-6 rounded-2xl border border-neutral-800 max-w-xl mx-auto space-y-4 shadow-xl">
+                            <div>
+                                <label class="block text-xs font-bold text-neutral-300 mb-2">Ingresa una contraseña para evaluar:</label>
+                                <div class="relative">
+                                    <input type="text" id="pass-tester-input" oninput="checkPasswordStrength()" placeholder="Ej: P@ssw0rd2026!Secure" 
+                                        class="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-100 font-mono focus:outline-none focus:border-brand-gold transition">
+                                </div>
+                            </div>
+
+                            <!-- Progress Meter -->
+                            <div>
+                                <div class="flex justify-between text-xs mb-1.5">
+                                    <span class="text-neutral-400">Nivel de Fortaleza:</span>
+                                    <span id="pass-strength-text" class="font-bold text-neutral-400">Sin ingresar</span>
+                                </div>
+                                <div class="w-full bg-black h-2.5 rounded-full overflow-hidden p-0.5 border border-neutral-800">
+                                    <div id="pass-strength-bar" class="h-full w-0 bg-neutral-700 rounded-full transition-all duration-300"></div>
+                                </div>
+                            </div>
+
+                            <!-- Validation Checks List -->
+                            <div class="grid grid-cols-2 gap-2 text-xs pt-2 font-mono">
+                                <div id="check-len" class="text-neutral-500"><i class="fa-solid fa-circle-xmark mr-1"></i> Mínimo 12 caracteres</div>
+                                <div id="check-num" class="text-neutral-500"><i class="fa-solid fa-circle-xmark mr-1"></i> Incluye números</div>
+                                <div id="check-sym" class="text-neutral-500"><i class="fa-solid fa-circle-xmark mr-1"></i> Símbolo especial (@,#,$)</div>
+                                <div id="check-case" class="text-neutral-500"><i class="fa-solid fa-circle-xmark mr-1"></i> Mayúsculas / Minúsculas</div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 10,
+                title: "10. Detective de Phishing",
+                icon: "fa-fish-fins",
+                category: "Simulación",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">09. DESAFÍO SIMULADO</span>
+                            <h2 class="text-2xl font-bold text-white">Detective de Phishing: Encuentra las Amenazas</h2>
+                            <p class="text-xs text-neutral-400">Haz clic en las 3 zonas rojas sospechosas dentro del correo engañoso para neutralizar el ataque.</p>
+                        </div>
+
+                        <!-- Simulated Email Card -->
+                        <div class="bg-black border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl relative max-w-2xl mx-auto">
+                            <!-- Email Header -->
+                            <div class="bg-neutral-900/90 p-4 border-b border-neutral-800 text-xs space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-neutral-400">De:</span>
+                                        <button onclick="foundPhishingHotspot('sender')" class="relative text-rose-400 hover:bg-brand-crimson/20 px-2.5 py-1 rounded-lg font-mono font-bold transition border border-dashed border-brand-crimsonLight/50">
+                                            soporte@securetech-verify-bank.com
+                                            <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                                <span class="hotspot-ring absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-crimsonLight"></span>
+                                            </span>
+                                        </button>
+                                    </div>
+                                    <span class="text-brand-gold font-bold text-[10px] bg-brand-gold/10 px-2 py-0.5 rounded-full border border-brand-gold/30">Urgente</span>
+                                </div>
+                                <div>
+                                    <span class="text-neutral-400">Asunto:</span>
+                                    <span class="font-bold text-white">¡ALERTA URGENTE: Bloqueo de cuenta bancaria en 2 horas!</span>
+                                </div>
+                            </div>
+
+                            <!-- Email Body -->
+                            <div class="p-6 space-y-4 text-xs text-neutral-300">
+                                <p>Estimado Colaborador de SecureTech,</p>
+                                <p>Hemos detectado un acceso no autorizado a su plataforma. Si no confirma sus credenciales inmediatamente, sus permisos serán suspendidos.</p>
+                                
+                                <div class="py-3 text-center">
+                                    <button onclick="foundPhishingHotspot('link')" class="relative bg-gradient-to-r from-brand-crimson to-neutral-800 hover:from-brand-crimsonLight hover:to-brand-crimson text-white font-bold px-6 py-2.5 rounded-xl transition shadow-lg border border-brand-crimsonLight/40">
+                                        RENOVAR CREDENCIALES AQUÍ
+                                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                            <span class="hotspot-ring absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-crimsonLight"></span>
+                                        </span>
+                                    </button>
+                                </div>
+
+                                <div class="pt-4 border-t border-neutral-900 text-[11px] text-neutral-500">
+                                    <button onclick="foundPhishingHotspot('urgency')" class="relative text-left hover:bg-brand-crimson/20 p-1.5 rounded-lg transition border border-dashed border-brand-crimsonLight/40">
+                                        *Nota: Este correo requiere acción en menos de 120 minutos sin validación de MFA.
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Score Pill -->
+                        <div class="text-center">
+                            <span id="phishing-score-badge" class="bg-neutral-900 border border-neutral-800 text-neutral-300 text-xs px-5 py-2.5 rounded-full font-mono shadow-md inline-block">
+                                Indicadores descubiertos: <strong id="phishing-count" class="text-brand-gold">0</strong> / 3
+                            </span>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 11,
+                title: "11. Control de Acceso (RBAC)",
+                icon: "fa-user-gear",
+                category: "Identidades",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">10. MATRIZ DE ROLES</span>
+                            <h2 class="text-2xl font-bold text-white">Control de Acceso Basado en Roles (RBAC)</h2>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-2xl border border-neutral-800 shadow-xl">
+                            <table class="w-full text-left text-xs text-neutral-300">
+                                <thead class="bg-neutral-900 text-brand-gold uppercase font-mono border-b border-neutral-800">
+                                    <tr>
+                                        <th class="p-3.5">Rol</th>
+                                        <th class="p-3.5">Servidores DB</th>
+                                        <th class="p-3.5">Código Fuente</th>
+                                        <th class="p-3.5">APIs de Pago</th>
+                                        <th class="p-3.5">Red Guest</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-neutral-800/80 bg-black">
+                                    <tr>
+                                        <td class="p-3.5 font-bold text-rose-400 flex items-center gap-1.5"><i class="fa-solid fa-user-shield text-brand-crimsonLight"></i> Admin TI</td>
+                                        <td class="p-3.5 text-emerald-400 font-bold">Lectura / Escritura / Root</td>
+                                        <td class="p-3.5 text-emerald-400 font-bold">Acceso Total</td>
+                                        <td class="p-3.5 text-emerald-400 font-bold">Control Total</td>
+                                        <td class="p-3.5 text-neutral-500">Denegado</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3.5 font-bold text-brand-teal flex items-center gap-1.5"><i class="fa-solid fa-code"></i> Programador</td>
+                                        <td class="p-3.5 text-brand-gold font-bold">Solo Sandbox / Dev</td>
+                                        <td class="p-3.5 text-emerald-400 font-bold">Lectura / Push PRs</td>
+                                        <td class="p-3.5 text-brand-gold font-bold">Ambiente Staging</td>
+                                        <td class="p-3.5 text-neutral-500">Denegado</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3.5 font-bold text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-user"></i> Usuario Estándar</td>
+                                        <td class="p-3.5 text-neutral-500">Sin Acceso</td>
+                                        <td class="p-3.5 text-neutral-500">Sin Acceso</td>
+                                        <td class="p-3.5 text-emerald-400 font-bold">Solo Ejecución Frontend</td>
+                                        <td class="p-3.5 text-neutral-500">Denegado</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3.5 font-bold text-neutral-400 flex items-center gap-1.5"><i class="fa-solid fa-eye"></i> Visitante / Guest</td>
+                                        <td class="p-3.5 text-neutral-500">Sin Acceso</td>
+                                        <td class="p-3.5 text-neutral-500">Sin Acceso</td>
+                                        <td class="p-3.5 text-neutral-500">Sin Acceso</td>
+                                        <td class="p-3.5 text-emerald-400 font-bold">Internet Restringido</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 12,
+                title: "12. Plan de Respaldo",
+                icon: "fa-floppy-disk",
+                category: "Continuidad",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">11. REGLA 3-2-1</span>
+                            <h2 class="text-2xl font-bold text-white">Plan de Respaldo y Recuperación</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 text-center shadow-lg">
+                                <span class="text-4xl font-black text-brand-gold font-mono">3</span>
+                                <h3 class="font-bold text-white text-sm my-2">Copias de Seguridad</h3>
+                                <p class="text-xs text-neutral-400">Mantener 1 copia primaria activa y 2 respaldos secundarios sincronizados.</p>
+                            </div>
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 text-center shadow-lg">
+                                <span class="text-4xl font-black text-brand-teal font-mono">2</span>
+                                <h3 class="font-bold text-white text-sm my-2">Medios Distintos</h3>
+                                <p class="text-xs text-neutral-400">Almacenar en un disco local NAS redundante y en la nube (AWS S3 Glacier).</p>
+                            </div>
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 text-center shadow-lg">
+                                <span class="text-4xl font-black text-emerald-400 font-mono">1</span>
+                                <h3 class="font-bold text-white text-sm my-2">Copia Offsite Cifrada</h3>
+                                <p class="text-xs text-neutral-400">1 copia fuera del centro principal con inmutabilidad contra Ransomware.</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-neutral-900 p-4 rounded-2xl border border-neutral-800 flex justify-around text-xs text-center font-mono shadow-md">
+                            <div>
+                                <span class="text-neutral-400 block mb-1">RTO (Tiempo Objetivo de Recuperación):</span>
+                                <strong class="text-brand-gold text-sm">&lt; 2 Horas</strong>
+                            </div>
+                            <div class="border-r border-neutral-800"></div>
+                            <div>
+                                <span class="text-neutral-400 block mb-1">RPO (Punto Objetivo de Recuperación):</span>
+                                <strong class="text-emerald-400 text-sm">&lt; 15 Minutos</strong>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 13,
+                title: "13. Protocolos de Incidentes",
+                icon: "fa-kit-medical",
+                category: "Respuesta",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">12. GUÍA DE CRISIS</span>
+                            <h2 class="text-2xl font-bold text-white">Protocolos Rápidos de Respuesta a Incidentes</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 space-y-2.5 shadow-lg">
+                                <h4 class="font-bold text-rose-400 text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-virus text-brand-crimsonLight"></i> Ante Malware / Ransomware
+                                </h4>
+                                <ol class="text-xs text-neutral-300 list-decimal list-inside space-y-1.5 leading-relaxed">
+                                    <li>Desconectar inmediatamente el equipo infectado de la red.</li>
+                                    <li>Notificar al equipo SOC / Ciberseguridad de guardia.</li>
+                                    <li>Restaurar el estado previo mediante snapshot inmutable.</li>
+                                </ol>
+                            </div>
+
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 space-y-2.5 shadow-lg">
+                                <h4 class="font-bold text-brand-gold text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-user-slash"></i> Ante Credenciales Robadas
+                                </h4>
+                                <ol class="text-xs text-neutral-300 list-decimal list-inside space-y-1.5 leading-relaxed">
+                                    <li>Revocar de inmediato todas las sesiones activas del usuario.</li>
+                                    <li>Forzar cambio de clave y regeneración del secreto MFA.</li>
+                                    <li>Auditar logs de accesos recientes en busca de exfiltración.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 14,
+                title: "14. Flujograma del Plan",
+                icon: "fa-diagram-project",
+                category: "Flujos",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">13. ALGORITMO DE DEFENSA</span>
+                            <h2 class="text-2xl font-bold text-white">Flujo Operativo de Respuesta a Ataques</h2>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-3 text-xs font-mono">
+                            <div class="bg-neutral-900/90 p-4 rounded-2xl border border-brand-crimsonLight/40 text-center w-full shadow-lg">
+                                <span class="text-rose-400 font-bold block mb-1">PASO 01</span>
+                                <h4 class="font-bold text-white">Detección</h4>
+                                <p class="text-[10px] text-neutral-400 mt-1">Alerta SIEM o EDR activa</p>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-neutral-600 hidden md:block"></i>
+                            <i class="fa-solid fa-arrow-down text-neutral-600 md:hidden"></i>
+
+                            <div class="bg-neutral-900/90 p-4 rounded-2xl border border-brand-teal/40 text-center w-full shadow-lg">
+                                <span class="text-brand-teal font-bold block mb-1">PASO 02</span>
+                                <h4 class="font-bold text-white">Aislamiento</h4>
+                                <p class="text-[10px] text-neutral-400 mt-1">Bloqueo lógico y físico</p>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-neutral-600 hidden md:block"></i>
+                            <i class="fa-solid fa-arrow-down text-neutral-600 md:hidden"></i>
+
+                            <div class="bg-neutral-900/90 p-4 rounded-2xl border border-brand-gold/40 text-center w-full shadow-lg">
+                                <span class="text-brand-gold font-bold block mb-1">PASO 03</span>
+                                <h4 class="font-bold text-white">Erradicación</h4>
+                                <p class="text-[10px] text-neutral-400 mt-1">Eliminación de la amenaza</p>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-neutral-600 hidden md:block"></i>
+                            <i class="fa-solid fa-arrow-down text-neutral-600 md:hidden"></i>
+
+                            <div class="bg-neutral-900/90 p-4 rounded-2xl border border-emerald-500/40 text-center w-full shadow-lg">
+                                <span class="text-emerald-400 font-bold block mb-1">PASO 04</span>
+                                <h4 class="font-bold text-white">Recuperación</h4>
+                                <p class="text-[10px] text-neutral-400 mt-1">Restauración e informe</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 15,
+                title: "15. Conclusión Ética",
+                icon: "fa-graduation-cap",
+                category: "Reflexión",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">14. REFLEXIÓN PROFESIONAL</span>
+                            <h2 class="text-2xl font-bold text-white">El Rol Ético y Técnico del Programador</h2>
+                        </div>
+
+                        <div class="bg-neutral-900/90 p-6 rounded-2xl border-l-4 border-brand-crimson text-neutral-300 space-y-4 shadow-xl">
+                            <blockquote class="text-base italic text-white font-medium leading-relaxed">
+                                "La ciberseguridad no es una capa superficial que se añade al finalizar el software; es el cimiento ético y técnico que garantiza la privacidad, confianza y estabilidad de los usuarios."
+                            </blockquote>
+                            <p class="text-xs leading-relaxed text-neutral-300">
+                                Como desarrolladores, tenemos la responsabilidad directa de escribir código seguro por diseño (Security by Design), asegurando la sanitización de datos y el cumplimiento estricto de las normativas internacionales de protección de la información.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 16,
+                title: "16. Fuentes y Normativas",
+                icon: "fa-book-bookmark",
+                category: "Referencias",
+                render: () => `
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-mono font-bold text-brand-gold tracking-widest uppercase">15. MARCO NORMATIVO</span>
+                            <h2 class="text-2xl font-bold text-white">Fuentes y Estándares Consultados</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 space-y-2 shadow-lg hover:border-brand-crimson/40 transition">
+                                <h4 class="font-bold text-brand-crimsonLight text-sm flex items-center gap-2"><i class="fa-solid fa-bookmark"></i> ISO/IEC 27001</h4>
+                                <p class="text-xs text-neutral-400">Estándar internacional para Sistemas de Gestión de Seguridad de la Información (SGSI).</p>
+                            </div>
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 space-y-2 shadow-lg hover:border-brand-teal/40 transition">
+                                <h4 class="font-bold text-brand-teal text-sm flex items-center gap-2"><i class="fa-solid fa-bookmark"></i> OWASP Top 10</h4>
+                                <p class="text-xs text-neutral-400">Documento de concienciación sobre los riesgos más críticos en aplicaciones web.</p>
+                            </div>
+                            <div class="bg-neutral-900/90 p-5 rounded-2xl border border-neutral-800 space-y-2 shadow-lg hover:border-brand-gold/40 transition">
+                                <h4 class="font-bold text-brand-gold text-sm flex items-center gap-2"><i class="fa-solid fa-bookmark"></i> NIST Framework</h4>
+                                <p class="text-xs text-neutral-400">Marco de ciberseguridad para Identificar, Proteger, Detectar, Responder y Recuperar.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        let currentSectionIndex = 0;
+        let phishingFoundCount = 0;
+        const phishingHotspotsFound = { sender: false, link: false, urgency: false };
+
+        // DOM Initialization
+        window.onload = function() {
+            renderSidebarTabs();
+            switchSection(1);
+            loadAuditNotes();
+            loadThemePreference();
+            
+            // Set dynamic current year in footer
+            const yearSpan = document.getElementById('current-year-display');
+            if (yearSpan) yearSpan.innerText = new Date().getFullYear();
+
+            // Interactive background & draggable modal windows
+            initParticleBackground();
+            makeModalDraggable('audit-notes-modal', 'audit-notes-box', '.modal-drag-handle');
+            makeModalDraggable('detail-modal', 'detail-modal-box', '.modal-drag-handle');
+        };
+
+        // Close modals with the Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDetailModal();
+                closeAuditNotesModal();
+            }
+        });
+
+        // Close a modal when clicking on the dark backdrop (outside the content box)
+        document.querySelectorAll('#detail-modal, #audit-notes-modal').forEach(modalEl => {
+            modalEl.addEventListener('click', function(e) {
+                if (e.target === modalEl) modalEl.classList.add('hidden');
+            });
+        });
+
+        /* ---------- THEME TOGGLE ---------- */
+        function toggleDarkMode() {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            const icon = document.querySelector('#theme-toggle-btn i');
+            if (icon) icon.className = isLight ? "fa-solid fa-moon text-sm" : "fa-solid fa-sun text-sm";
+            localStorage.setItem('lapbook_theme', isLight ? 'light' : 'dark');
+        }
+
+        function loadThemePreference() {
+            const saved = localStorage.getItem('lapbook_theme');
+            if (saved === 'light') toggleDarkMode();
+        }
+
+        /* ---------- MOBILE NAVIGATION MENU ---------- */
+        function toggleMobileMenu() {
+            const aside = document.getElementById('sidebar-nav');
+            const overlay = document.getElementById('mobile-nav-overlay');
+            const isOpen = !aside.classList.contains('hidden');
+
+            if (isOpen) {
+                aside.classList.add('hidden');
+                aside.classList.remove('fixed', 'inset-x-4', 'top-20', 'z-50', 'max-h-[80vh]', 'overflow-y-auto');
+                overlay.classList.add('hidden');
+            } else {
+                aside.classList.remove('hidden');
+                aside.classList.add('fixed', 'inset-x-4', 'top-20', 'z-50', 'max-h-[80vh]', 'overflow-y-auto');
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        function closeMobileMenuIfOpen() {
+            const aside = document.getElementById('sidebar-nav');
+            if (window.innerWidth < 1024 && !aside.classList.contains('hidden')) {
+                toggleMobileMenu();
+            }
+        }
+
+        /* ---------- DETAIL MODAL CLOSE ---------- */
+        function closeDetailModal() {
+            const modal = document.getElementById('detail-modal');
+            if (modal) modal.classList.add('hidden');
+            const box = document.getElementById('detail-modal-box');
+            if (box && box._resetDragPosition) box._resetDragPosition();
+        }
+
+        /* ---------- FOOTER LEGAL LINKS ---------- */
+        function showLegalDoc(type) {
+            const modal = document.getElementById('detail-modal');
+            const content = document.getElementById('modal-detail-content');
+
+            const docs = {
+                privacy: {
+                    title: "Política de Privacidad",
+                    icon: "fa-user-shield",
+                    desc: "Documento de ejemplo con fines académicos. SecureTech Solutions es una empresa ficticia creada para este proyecto de Lapbook Digital sobre el Plan de Seguridad Informática, por lo que este enlace no corresponde a una política de privacidad real."
+                },
+                terms: {
+                    title: "Términos de Servicio",
+                    icon: "fa-file-contract",
+                    desc: "Documento de ejemplo con fines académicos. SecureTech Solutions es una empresa ficticia creada para este proyecto de Lapbook Digital sobre el Plan de Seguridad Informática, por lo que este enlace no corresponde a términos de servicio reales."
+                }
+            };
+
+            const data = docs[type];
+            content.innerHTML = `
+                <div class="space-y-3">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid ${data.icon} text-brand-gold"></i> ${data.title}
+                    </h3>
+                    <p class="text-xs text-neutral-300 leading-relaxed">${data.desc}</p>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function renderSidebarTabs() {
+            const container = document.getElementById('nav-tabs-container');
+            container.innerHTML = lapbookModules.map((m) => `
+                <button onclick="switchSection(${m.id})" id="tab-btn-${m.id}" 
+                    class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-all duration-150 border border-transparent hover:bg-neutral-800 text-neutral-400">
+                    <div class="flex items-center space-x-2.5 truncate">
+                        <i class="fa-solid ${m.icon} w-4 text-center"></i>
+                        <span class="truncate">${m.title}</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] opacity-40"></i>
+                </button>
+            `).join('');
+        }
+
+        function switchSection(id) {
+            const modIndex = lapbookModules.findIndex(m => m.id === id);
+            if (modIndex === -1) return;
+
+            currentSectionIndex = modIndex;
+            const currentMod = lapbookModules[currentSectionIndex];
+
+            // Render Body
+            document.getElementById('section-body').innerHTML = currentMod.render();
+            document.getElementById('section-step-indicator').innerText = `Módulo ${currentMod.id} de 16`;
+
+            // Highlight Active Tab
+            lapbookModules.forEach(m => {
+                const btn = document.getElementById(`tab-btn-${m.id}`);
+                if (btn) {
+                    if (m.id === id) {
+                        btn.className = "w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all duration-150 bg-brand-crimson/20 text-brand-gold border border-brand-gold/30 shadow-sm";
+                    } else {
+                        btn.className = "w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-all duration-150 border border-transparent hover:bg-neutral-800 text-neutral-400";
+                    }
+                }
+            });
+
+            // Scroll top smoothly on content card
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Initialize special widgets if present
+            if (id === 7) setTimeout(initRiskChart, 100);
+
+            // Auto-close the mobile nav drawer after picking a module
+            closeMobileMenuIfOpen();
+        }
+
+        function navigateSection(direction) {
+            let newIndex = currentSectionIndex + direction;
+            if (newIndex >= 0 && newIndex < lapbookModules.length) {
+                switchSection(lapbookModules[newIndex].id);
+            }
+        }
+
+        function showMapZoneDetail(zoneKey) {
+            const modal = document.getElementById('detail-modal');
+            const content = document.getElementById('modal-detail-content');
+
+            const mapData = {
+                bunker: {
+                    title: "Subsuelo -1: Data Center Búnker",
+                    icon: "fa-vault text-rose-400",
+                    location: "Av. Las Condes 10200, Nivel Subterráneo -1",
+                    security: [
+                        "Doble factor de autenticación biométrica (Reconocimiento facial 3D + Palma)",
+                        "Inyección de gas inerte FM-200 para extinción de incendios sin agua",
+                        "Sistemas de UPS de grado industrial con autonomía de 72 horas continuas",
+                        "Servidores montados sobre aisladores sísmicos de amortiguación hidráulica"
+                    ],
+                    status: "Monitoreo Biométrico Activo (0 incidentes)"
+                },
+                soc: {
+                    title: "Piso 2: Centro de Operaciones de Seguridad (SOC 24/7)",
+                    icon: "fa-desktop text-brand-teal",
+                    location: "Av. Las Condes 10200, Ala Norte",
+                    security: [
+                        "Pantalla gigante Videowall con mapa global de ciberamenazas SIEM",
+                        "Aislamiento electromagnético mediante Jaula de Faraday corporativa",
+                        "Acceso por escáner de huella dactilar y tarjeta RFID cifrada de alta frecuencia",
+                        "Monitoreo continuo en turnos rotativos 24 horas al día, 365 días al año"
+                    ],
+                    status: "12 Analistas de Turno / Alerta Verde"
+                },
+                entry: {
+                    title: "Piso 1: Control de Acceso Biométrico Principal",
+                    icon: "fa-fingerprint text-brand-gold",
+                    location: "Av. Las Condes 10200, Recepción Principal",
+                    security: [
+                        "Torniquetes inteligentes con cámara térmica y escáner biológico facial",
+                        "Arco detector de metales e inspección por Rayos X para mochilas y bolsos",
+                        "Punto central de guardia de seguridad física armada y registro digital de visitas",
+                        "Cámaras de circuito cerrado CCTV HD con almacenamiento cifrado por 90 días"
+                    ],
+                    status: "Perímetro Asegurado 24/7"
+                },
+                cloud: {
+                    title: "Piso 3: Nodo Enlace Nube Privada",
+                    icon: "fa-cloud-lock text-emerald-400",
+                    location: "Av. Las Condes 10200, Sala de Comunicaciones P3",
+                    security: [
+                        "Canal de fibra óptica dedicada hacia AWS Direct Connect con cifrado hardware MACsec",
+                        "Protección anti-DDoS hardware perimetral de nivel de operador",
+                        "Climatización redundante N+1 con monitoreo higrométrico continuo"
+                    ],
+                    status: "Latencia Enlace: 1.2ms (Óptimo)"
+                },
+                devlab: {
+                    title: "Piso 2: Laboratorio DevSecOps & Pentesting",
+                    icon: "fa-flask-vial text-sky-400",
+                    location: "Av. Las Condes 10200, Ala Sur",
+                    security: [
+                        "Red Sandbox aislada de la intranet principal para análisis de Malware y Exploits",
+                        "Terminales de desarrollo sin puertos USB habilitados físicamente",
+                        "Auditorías automatizadas SAST/DAST integradas directamente en el código"
+                    ],
+                    status: "Entorno Sandbox Aislado"
+                },
+                vault: {
+                    title: "Piso 3: Búnker de Llaves Criptográficas HSM",
+                    icon: "fa-key-skeleton text-purple-400",
+                    location: "Av. Las Condes 10200, Cámara Ejecutiva",
+                    security: [
+                        "Módulos Hardware de Seguridad (HSM) FIPS 140-2 Nivel 3",
+                        "Custodia de claves bajo protocolo de doble custodia (2 ejecutivos requeridos)",
+                        "Cámara blindada antiexplosiones y protección de blindaje de plomo anti-EMF"
+                    ],
+                    status: "Llaves Maestras Protegidas"
+                }
+            };
+
+            const item = mapData[zoneKey];
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3 border-b border-neutral-800 pb-3">
+                        <div class="p-3 bg-black rounded-xl border border-neutral-800">
+                            <i class="fa-solid ${item.icon} text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-white">${item.title}</h3>
+                            <p class="text-xs text-brand-gold font-mono"><i class="fa-solid fa-location-dot mr-1"></i>${item.location}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-neutral-300 uppercase font-mono mb-2">Protocolos de Seguridad Física Activos:</h4>
+                        <ul class="space-y-2 text-xs text-neutral-300">
+                            ${item.security.map(s => `
+                                <li class="bg-black p-2.5 rounded-xl border border-neutral-800 flex items-start gap-2">
+                                    <i class="fa-solid fa-shield-check text-emerald-400 mt-0.5"></i>
+                                    <span>${s}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    <div class="bg-black p-3 rounded-xl border border-neutral-800 flex justify-between items-center text-xs font-mono">
+                        <span class="text-neutral-400">Estado del Sector:</span>
+                        <span class="text-emerald-400 font-bold">${item.status}</span>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function checkPasswordStrength() {
+            const val = document.getElementById('pass-tester-input').value;
+            let score = 0;
+
+            const lenCheck = val.length >= 12;
+            const numCheck = /\d/.test(val);
+            const symCheck = /[^a-zA-Z0-9]/.test(val);
+            const caseCheck = /[a-z]/.test(val) && /[A-Z]/.test(val);
+
+            // Update UI Icons
+            updateCheckUI('check-len', lenCheck);
+            updateCheckUI('check-num', numCheck);
+            updateCheckUI('check-sym', symCheck);
+            updateCheckUI('check-case', caseCheck);
+
+            if (lenCheck) score += 25;
+            if (numCheck) score += 25;
+            if (symCheck) score += 25;
+            if (caseCheck) score += 25;
+
+            const bar = document.getElementById('pass-strength-bar');
+            const text = document.getElementById('pass-strength-text');
+
+            bar.style.width = `${score}%`;
+            if (score === 0) {
+                bar.className = "h-full bg-neutral-700 transition-all duration-300";
+                text.innerText = "Sin ingresar";
+                text.className = "font-bold text-neutral-400";
+            } else if (score <= 50) {
+                bar.className = "h-full bg-rose-500 transition-all duration-300";
+                text.innerText = "Débil";
+                text.className = "font-bold text-rose-400";
+            } else if (score <= 75) {
+                bar.className = "h-full bg-brand-gold transition-all duration-300";
+                text.innerText = "Aceptable";
+                text.className = "font-bold text-brand-gold";
+            } else {
+                bar.className = "h-full bg-emerald-500 transition-all duration-300";
+                text.innerText = "Excelente / Muy Fuerte";
+                text.className = "font-bold text-emerald-400";
+            }
+        }
+
+        function updateCheckUI(id, isValid) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (isValid) {
+                el.className = "text-emerald-400 font-bold";
+                el.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${el.innerText.replace(/^.*?\s/, '')}`;
+            } else {
+                el.className = "text-neutral-500";
+                el.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> ${el.innerText.replace(/^.*?\s/, '')}`;
+            }
+        }
+
+        function foundPhishingHotspot(key) {
+            if (!phishingHotspotsFound[key]) {
+                phishingHotspotsFound[key] = true;
+                phishingFoundCount++;
+                document.getElementById('phishing-count').innerText = phishingFoundCount;
+
+                if (phishingFoundCount === 3) {
+                    const badge = document.getElementById('phishing-score-badge');
+                    badge.className = "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-5 py-2.5 rounded-full font-mono font-bold shadow-md inline-block";
+                    badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ¡Excelente! Has neutralizado todas las trampas de phishing.`;
+                }
+            }
+        }
+
+        function updateRiskMatrixCalc() {
+            const prob = parseInt(document.getElementById('risk-prob').value);
+            const impact = parseInt(document.getElementById('risk-impact').value);
+            const score = prob * impact;
+
+            document.getElementById('prob-val-display').innerText = prob;
+            document.getElementById('impact-val-display').innerText = impact;
+
+            const scoreDisplay = document.getElementById('risk-score-display');
+            const tagDisplay = document.getElementById('risk-classification-tag');
+
+            scoreDisplay.innerText = score;
+
+            if (score >= 15) {
+                scoreDisplay.className = "text-3xl font-black text-rose-500 my-1";
+                tagDisplay.className = "px-3 py-1 rounded-full text-xs font-bold bg-brand-crimson/20 text-rose-300 border border-brand-crimsonLight/40";
+                tagDisplay.innerText = "RIESGO CRÍTICO";
+            } else if (score >= 8) {
+                scoreDisplay.className = "text-3xl font-black text-brand-gold my-1";
+                tagDisplay.className = "px-3 py-1 rounded-full text-xs font-bold bg-brand-gold/10 text-brand-gold border border-brand-gold/30";
+                tagDisplay.innerText = "RIESGO MODERADO";
+            } else {
+                scoreDisplay.className = "text-3xl font-black text-brand-teal my-1";
+                tagDisplay.className = "px-3 py-1 rounded-full text-xs font-bold bg-brand-teal/10 text-brand-teal border border-brand-teal/30";
+                tagDisplay.innerText = "RIESGO BAJO";
+            }
+        }
+
+        function initRiskChart() {
+            const ctx = document.getElementById('riskChart');
+            if (!ctx) return;
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Riesgos Críticos', 'Riesgos Moderados', 'Riesgos Bajos'],
+                    datasets: [{
+                        data: [4, 5, 3],
+                        backgroundColor: ['#b91c1c', '#f5f5f5', '#7c3aed'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11, family: 'Inter' } } } }
+                }
+            });
+        }
+
+        function openAuditNotesModal() {
+            document.getElementById('audit-notes-modal').classList.remove('hidden');
+        }
+        function closeAuditNotesModal() {
+            document.getElementById('audit-notes-modal').classList.add('hidden');
+            const box = document.getElementById('audit-notes-box');
+            if (box && box._resetDragPosition) box._resetDragPosition();
+        }
+
+        function saveAuditNotes() {
+            const val = document.getElementById('audit-notes-input').value;
+            localStorage.setItem('lapbook_audit_notes', val);
+            
+            const status = document.getElementById('notes-status-text');
+            status.classList.remove('hidden');
+            setTimeout(() => status.classList.add('hidden'), 2000);
+            
+            updateNotesBadge();
+        }
+
+        function loadAuditNotes() {
+            const saved = localStorage.getItem('lapbook_audit_notes');
+            if (saved) {
+                document.getElementById('audit-notes-input').value = saved;
+                updateNotesBadge();
+            }
+        }
+
+        function clearAuditNotes() {
+            localStorage.removeItem('lapbook_audit_notes');
+            document.getElementById('audit-notes-input').value = '';
+            updateNotesBadge();
+        }
+
+        function updateNotesBadge() {
+            const val = document.getElementById('audit-notes-input').value;
+            document.getElementById('notes-count-badge').innerText = val.trim() ? '1' : '0';
+        }
+
+        function showNodeDetail(type) {
+            const modal = document.getElementById('detail-modal');
+            const content = document.getElementById('modal-detail-content');
+
+            const details = {
+                cloud: { title: "Zona Nube & AWS Services", desc: "Servidores hospedados en AWS Virginia. Cuenta con cifrado KMS de datos en reposo y conexiones TLS 1.3 obligatorias." },
+                dmz: { title: "Firewall Perimetral & DMZ", desc: "Instancia UTM Fortinet encargada del filtrado WAF (Web Application Firewall) e inspección profunda de paquetes de entrada." },
+                internal: { title: "Red Interna VLAN 10", desc: "Aislamiento estricto. Requiere túnel VPN IPSec con autenticación MFA de doble factor para cualquier acceso remoto." },
+                db: { title: "Base de Datos PostgreSQL", desc: "Zona de máxima seguridad aislada sin acceso directo a Internet. Réplicas síncronas cifradas en tiempo real." }
+            };
+
+            const data = details[type];
+            content.innerHTML = `
+                <div class="space-y-3">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-server text-brand-gold"></i> ${data.title}
+                    </h3>
+                    <p class="text-xs text-neutral-300 leading-relaxed">${data.desc}</p>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        /* ========================================================
+           FONDO INTERACTIVO: RED DE PARTÍCULAS CONECTADAS
+           ======================================================== */
+        function initParticleBackground() {
+            const canvas = document.getElementById('bg-particles-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            let width, height, dpr;
+            let particles = [];
+            const mouse = { x: null, y: null, active: false };
+            const LINK_DIST = 140;
+            const MOUSE_DIST = 180;
+
+            function isLight() {
+                return document.body.classList.contains('light-mode');
+            }
+
+            function resize() {
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+                canvas.style.width = width + 'px';
+                canvas.style.height = height + 'px';
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                // Recalculate particle count based on viewport area
+                const targetCount = Math.min(110, Math.max(35, Math.round((width * height) / 16000)));
+                particles = [];
+                for (let i = 0; i < targetCount; i++) {
+                    particles.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        vx: (Math.random() - 0.5) * 0.35,
+                        vy: (Math.random() - 0.5) * 0.35,
+                        r: Math.random() * 1.6 + 1
+                    });
+                }
+            }
+
+            function step() {
+                ctx.clearRect(0, 0, width, height);
+
+                const light = isLight();
+                const dotColor = light ? '30, 41, 59' : '245, 245, 245';
+                const lineColor = light ? '100, 116, 139' : '239, 68, 68';
+                const mouseLineColor = light ? '124, 58, 237' : '124, 58, 237';
+
+                // Update & draw particles
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+
+                    // Gentle repulsion away from the mouse cursor
+                    if (mouse.active) {
+                        const dx = p.x - mouse.x;
+                        const dy = p.y - mouse.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < MOUSE_DIST && dist > 0.01) {
+                            const force = (1 - dist / MOUSE_DIST) * 0.6;
+                            p.vx += (dx / dist) * force * 0.05;
+                            p.vy += (dy / dist) * force * 0.05;
+                        }
+                    }
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Light friction so speed stays gentle
+                    p.vx *= 0.98;
+                    p.vy *= 0.98;
+
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+                    p.x = Math.max(0, Math.min(width, p.x));
+                    p.y = Math.max(0, Math.min(height, p.y));
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${dotColor}, 0.65)`;
+                    ctx.fill();
+                }
+
+                // Connect nearby particles
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const a = particles[i], b = particles[j];
+                        const dx = a.x - b.x, dy = a.y - b.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < LINK_DIST) {
+                            ctx.beginPath();
+                            ctx.moveTo(a.x, a.y);
+                            ctx.lineTo(b.x, b.y);
+                            ctx.strokeStyle = `rgba(${lineColor}, ${0.18 * (1 - dist / LINK_DIST)})`;
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // Connect particles to the mouse cursor
+                if (mouse.active) {
+                    for (let i = 0; i < particles.length; i++) {
+                        const p = particles[i];
+                        const dx = p.x - mouse.x, dy = p.y - mouse.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < MOUSE_DIST) {
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(mouse.x, mouse.y);
+                            ctx.strokeStyle = `rgba(${mouseLineColor}, ${0.35 * (1 - dist / MOUSE_DIST)})`;
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    }
+                    ctx.beginPath();
+                    ctx.arc(mouse.x, mouse.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${mouseLineColor}, 0.9)`;
+                    ctx.fill();
+                }
+
+                requestAnimationFrame(step);
+            }
+
+            window.addEventListener('mousemove', function (e) {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+                mouse.active = true;
+            });
+            window.addEventListener('mouseleave', function () {
+                mouse.active = false;
+            });
+            window.addEventListener('touchmove', function (e) {
+                if (e.touches && e.touches[0]) {
+                    mouse.x = e.touches[0].clientX;
+                    mouse.y = e.touches[0].clientY;
+                    mouse.active = true;
+                }
+            }, { passive: true });
+            window.addEventListener('resize', resize);
+
+            resize();
+            requestAnimationFrame(step);
+        }
+
+        /* ========================================================
+           VENTANAS (MODALES) ARRASTRABLES
+           ======================================================== */
+        function makeModalDraggable(overlayId, boxId, handleSelector) {
+            const overlay = document.getElementById(overlayId);
+            const box = document.getElementById(boxId);
+            if (!overlay || !box) return;
+            const handle = box.querySelector(handleSelector);
+            if (!handle) return;
+
+            let dragging = false;
+            let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+            const MARGIN = 30;
+
+            function beginDrag(clientX, clientY) {
+                const rect = box.getBoundingClientRect();
+                startLeft = rect.left;
+                startTop = rect.top;
+                startX = clientX;
+                startY = clientY;
+                box.style.position = 'fixed';
+                box.style.margin = '0';
+                box.style.left = startLeft + 'px';
+                box.style.top = startTop + 'px';
+                box.style.transform = 'none';
+                dragging = true;
+                box.classList.add('is-dragging');
+                document.body.style.userSelect = 'none';
+            }
+
+            function moveDrag(clientX, clientY) {
+                if (!dragging) return;
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+                let newLeft = startLeft + dx;
+                let newTop = startTop + dy;
+                newLeft = Math.min(Math.max(newLeft, MARGIN - box.offsetWidth), window.innerWidth - MARGIN);
+                newTop = Math.min(Math.max(newTop, 0), window.innerHeight - MARGIN);
+                box.style.left = newLeft + 'px';
+                box.style.top = newTop + 'px';
+            }
+
+            function endDrag() {
+                if (!dragging) return;
+                dragging = false;
+                box.classList.remove('is-dragging');
+                document.body.style.userSelect = '';
+            }
+
+            handle.addEventListener('mousedown', function (e) {
+                if (e.target.closest('button')) return;
+                beginDrag(e.clientX, e.clientY);
+                e.preventDefault();
+            });
+            window.addEventListener('mousemove', function (e) {
+                moveDrag(e.clientX, e.clientY);
+            });
+            window.addEventListener('mouseup', endDrag);
+
+            handle.addEventListener('touchstart', function (e) {
+                if (e.target.closest('button')) return;
+                const t = e.touches[0];
+                beginDrag(t.clientX, t.clientY);
+            }, { passive: true });
+            window.addEventListener('touchmove', function (e) {
+                if (!dragging) return;
+                const t = e.touches[0];
+                moveDrag(t.clientX, t.clientY);
+            }, { passive: true });
+            window.addEventListener('touchend', endDrag);
+
+            // Exposed so the modal recenters the next time it is opened
+            box._resetDragPosition = function () {
+                box.style.position = '';
+                box.style.left = '';
+                box.style.top = '';
+                box.style.margin = '';
+                box.style.transform = '';
+            };
+        }
+
+    </script>
+</body>
+</html>
